@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@/lib/*": ["./src/lib/*"],
+      "@/navigation/*": ["./src/navigation/*"],
+      "@/screens/*": ["./src/screens/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "tailwind.config": ["./tailwind.config"]
+    },
     "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -16,5 +25,6 @@
     "incremental": true,
     "noUncheckedIndexedAccess": true
   },
+  "include": ["src/**/*", "app.config.ts", "index.ts", "AuthStack.ts"],
   "extends": "expo/tsconfig.base"
 }
