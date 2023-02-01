@@ -3,7 +3,6 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'nativewind/babel',
       [
         'module-resolver',
         {
@@ -14,7 +13,7 @@ module.exports = function (api) {
             '@/components': './src/components',
             '@/hooks': './src/hooks',
             '@/utils': './src/utils',
-            'tailwind.config': './tailwind.config',
+            '@/theme': './src/theme',
           },
         },
       ],

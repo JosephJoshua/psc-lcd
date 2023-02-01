@@ -6,11 +6,7 @@ module.exports = {
   semi: true,
   trailingComma: 'all',
   tabWidth: 2,
-  plugins: [
-    require.resolve('prettier-plugin-tailwindcss'),
-    require.resolve('@ianvs/prettier-plugin-sort-imports'),
-  ],
-  tailwindConfig: './lib/tailwind',
+  plugins: [require.resolve('@ianvs/prettier-plugin-sort-imports')],
   importOrder: [
     '^(react/(.*)$)|^(react$)|^(react-native(.*)$)',
     '^(expo(.*)$)|^(expo$)',

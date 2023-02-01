@@ -4,40 +4,43 @@ import {
   Pressable,
   PressableProps,
   StyleProp,
+  StyleSheet,
   Text,
   View,
   ViewStyle,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import tailwindConfig from '@/utils/tailwindConfig';
-import clsx from 'clsx';
-import { styled } from 'nativewind';
+import theme from '@/theme';
 
 export type ButtonProps = PressableProps & {
   title: string;
-  variant: keyof typeof variantClasses;
+  variant: keyof typeof containerStyles;
   style?: StyleProp<ViewStyle>;
 };
 
-const variantClasses = {
-  primary: clsx('bg-primary px-4 py-2 rounded-md'),
-};
-
-const variantTextClasses: Record<keyof typeof variantClasses, string> = {
-  primary: clsx('text-white text-lg text-center font-semibold'),
-};
-
-const variantStyles: Record<
-  keyof typeof variantClasses,
-  StyleProp<ViewStyle>
-> = {
+const containerStyles = StyleSheet.create({
   primary: {
-    shadowColor: tailwindConfig.theme.colors.primary,
+    backgroundColor: theme.colors.primary,
+    pddaddingLeft: theme.spacing.md,
+    paddingRight: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
-};
+});
+
+const textStyles = StyleSheet.create({
+  primary: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: theme.fontWeight.semibold,
+    fontSize: theme.fontSize.sm,
+  },
+});
 
 const Button = forwardRef<View, ButtonProps>(
   ({ title, variant, style, onPress, ...props }, ref) => {
@@ -51,17 +54,12 @@ const Button = forwardRef<View, ButtonProps>(
         {...props}
         onPress={handlePress}
         ref={ref}
-        className={clsx(variantClasses[variant], props.className)}
-        style={[variantStyles[variant], style]}
+        style={[containerStyles[variant], style]}
       >
-        <Text className={variantTextClasses[variant]}>{title}</Text>
+        <Text style={textStyles[variant]}>{title}</Text>
       </Pressable>
     );
   },
 );
 
-export default styled(Button, {
-  props: {
-    className: true,
-  },
-});
+export default Button;

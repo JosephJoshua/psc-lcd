@@ -1,11 +1,12 @@
 import { ReactNode, forwardRef } from 'react';
-import { Text, TextInputProps, View } from 'react-native';
+import { StyleSheet, TextInputProps } from 'react-native';
 import {
   NativeViewGestureHandlerProps,
   TextInput,
 } from 'react-native-gesture-handler';
-import clsx from 'clsx';
-import { styled } from 'nativewind';
+import { HBox, VBox } from '@/lib/styled/layout';
+import { Text } from '@/lib/styled/text';
+import theme from '@/theme';
 
 export type TextFieldProps = TextInputProps &
   NativeViewGestureHandlerProps & {
@@ -14,29 +15,36 @@ export type TextFieldProps = TextInputProps &
   };
 
 const TextField = forwardRef<TextInput, TextFieldProps>(
-  ({ className, label, withAsterisk, ...props }, ref) => {
+  ({ label, style, withAsterisk, ...props }, ref) => {
     return (
-      <View className="flex flex-col gap-0.5">
-        <View className="flex flex-row items-center">
-          <Text className="text-lg font-semibold">{label}</Text>
-          {withAsterisk && (
-            <Text className="text-red-600 ml-1 font-semibold">*</Text>
-          )}
-        </View>
+      <VBox>
+        <HBox items="center" mb="xs">
+          <Text size="sm" weight="semibold">
+            {label}
+          </Text>
 
-        <TextInput
-          className={clsx(
-            'px-3 py-3 rounded-md border border-gray-500 shadow w-full bg-gray-50 transition-all duration-200 focus:border-primary focus:bg-white',
-            className,
+          {withAsterisk && (
+            <Text weight="semibold" color="red" ml="xs">
+              *
+            </Text>
           )}
-          ref={ref}
-          {...props}
-        />
-      </View>
+        </HBox>
+
+        <TextInput ref={ref} {...props} style={[styles.input, style]} />
+      </VBox>
     );
   },
 );
 
-export default styled(TextField, {
-  props: { className: true },
+const styles = StyleSheet.create({
+  input: {
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    width: '100%',
+    backgroundColor: theme.colors.lightgray,
+    border: `1px solid ${theme.colors.gray}`,
+    fontSize: theme.fontSize.sm,
+  },
 });
+
+export default TextField;

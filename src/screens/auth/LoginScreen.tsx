@@ -1,8 +1,10 @@
 import { FC } from 'react';
-import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Button from '@/components/Button';
 import TextField from '@/components/TextField';
+import { VBox } from '@/lib/styled/layout';
+import { Text } from '@/lib/styled/text';
+import theme from '@/theme';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Controller, FieldValues, useForm } from 'react-hook-form';
 import * as yup from 'yup';
@@ -24,8 +26,7 @@ const LoginScreen: FC = () => {
   };
 
   return (
-    <View
-      className="flex flex-col gap-6"
+    <VBox
       style={{
         paddingTop: insets.top + 48,
         paddingBottom: insets.bottom,
@@ -33,23 +34,30 @@ const LoginScreen: FC = () => {
         paddingRight: insets.right + 16,
       }}
     >
-      <Text className="text-3xl text-primary font-semibold text-center">
+      <Text size="xl" weight="semibold" color="primary" align="center">
         Selamat Datang
       </Text>
 
-      <Text className="text-center text-lg leading-6 px-8 break-words text-slate-600">
+      <Text
+        size="sm"
+        align="center"
+        color="slate"
+        lineHeight={1.4}
+        px="md"
+        my="md"
+      >
         Silahkan memasukan data Anda untuk memulai kembali.
       </Text>
 
-      <View className="flex flex-col">
+      <VBox>
         <Controller
           control={control}
           name="email"
           render={({ field: { onChange, ...field } }) => (
             <TextField
               {...field}
+              style={{ marginBottom: theme.spacing.md }}
               onChangeText={(value) => onChange(value)}
-              className="mb-5"
               label="Email"
               keyboardType="email-address"
               autoComplete="email"
@@ -79,13 +87,13 @@ const LoginScreen: FC = () => {
         />
 
         <Button
+          style={{ marginTop: theme.spacing.md }}
           title="Masuk"
           variant="primary"
-          className="mt-5"
           onPress={handleSubmit(handleFormSubmit)}
         />
-      </View>
-    </View>
+      </VBox>
+    </VBox>
   );
 };
 
