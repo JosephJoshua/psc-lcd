@@ -9890,6 +9890,7 @@ __metadata:
   resolution: "lcd@workspace:."
   dependencies:
     "@babel/core": ^7.12.9
+    "@expo/vector-icons": ^13.0.0
     "@expo/webpack-config": ^0.17.2
     "@hookform/resolvers": ^2.9.10
     "@ianvs/prettier-plugin-sort-imports": ^3.7.1

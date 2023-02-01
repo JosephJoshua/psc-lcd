@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import {
+  ActivityIndicator,
   GestureResponderEvent,
   Pressable,
   PressableProps,
@@ -12,38 +13,21 @@ import {
 import * as Haptics from 'expo-haptics';
 import theme from '@/theme';
 
+export type ButtonVariants = 'primary';
+
 export type ButtonProps = PressableProps & {
   title: string;
-  variant: keyof typeof containerStyles;
+  variant: ButtonVariants;
   style?: StyleProp<ViewStyle>;
+  isLoading?: boolean;
+  isDisabled?: boolean;
 };
 
-const containerStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: theme.colors.primary,
-    pddaddingLeft: theme.spacing.md,
-    paddingRight: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.sm,
-    borderRadius: theme.radius.sm,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-  },
-});
-
-const textStyles = StyleSheet.create({
-  primary: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: theme.fontWeight.semibold,
-    fontSize: theme.fontSize.sm,
-  },
-});
-
 const Button = forwardRef<View, ButtonProps>(
-  ({ title, variant, style, onPress, ...props }, ref) => {
+  (
+    { title, variant, style, onPress, isLoading, isDisabled, ...props },
+    ref,
+  ) => {
     const handlePress = (event: GestureResponderEvent) => {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onPress?.(event);
@@ -54,12 +38,74 @@ const Button = forwardRef<View, ButtonProps>(
         {...props}
         onPress={handlePress}
         ref={ref}
-        style={[containerStyles[variant], style]}
+        disabled={isDisabled}
+        style={[
+          baseStyles.container,
+          containerStyles[variant],
+          isDisabled && containerDisabledStyles[variant],
+          style,
+        ]}
       >
-        <Text style={textStyles[variant]}>{title}</Text>
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text
+            style={[
+              textStyles[variant],
+              isDisabled && textDisabledStyles[variant],
+            ]}
+          >
+            {title}
+          </Text>
+        )}
       </Pressable>
     );
   },
 );
+
+const baseStyles = StyleSheet.create({
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+
+const containerStyles: Record<ButtonVariants, object> = StyleSheet.create({
+  primary: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+});
+
+const containerDisabledStyles: Record<ButtonVariants, object> =
+  StyleSheet.create({
+    primary: {
+      backgroundColor: theme.colors.lightgray,
+      shadowColor: 'transparent',
+    },
+  });
+
+const textStyles: Record<ButtonVariants, object> = StyleSheet.create({
+  primary: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: theme.fontWeight.semibold,
+    fontSize: theme.fontSize.sm,
+  },
+});
+
+const textDisabledStyles: Record<ButtonVariants, object> = StyleSheet.create({
+  primary: {
+    color: theme.colors.gray,
+  },
+});
 
 export default Button;

@@ -1,9 +1,10 @@
 const theme = {
   colors: {
-    primary: '#FC5130',
+    primary: '#C9002E',
     white: '#FFFAFF',
     black: '#050401',
     cyan: '#30BCED',
+    green: '#15803D',
     slate: '#64748B',
     lightgray: '#EEE',
     gray: '#6B7280',
@@ -18,14 +19,15 @@ const theme = {
   },
   fontSize: {
     xs: 14,
-    sm: 18,
-    md: 20,
+    sm: 16,
+    md: 18,
     lg: 24,
     xl: 32,
   },
   spacing: {
     none: 0,
-    xs: 4,
+    xxs: 4,
+    xs: 8,
     sm: 12,
     md: 16,
     lg: 32,
