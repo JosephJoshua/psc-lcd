@@ -1,16 +1,20 @@
 import { FC, useEffect, useState } from 'react';
-import { Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Button from '@/components/Button';
-import TextField from '@/components/TextField';
 import { auth } from '@/lib/firebase';
-import { VBox } from '@/lib/styled/layout';
-import { Text } from '@/lib/styled/text';
-import theme from '@/theme';
 import { Feather } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { FirebaseError } from 'firebase/app';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  Box,
+  Button,
+  FormControl,
+  HStack,
+  Icon,
+  Input,
+  Pressable,
+  Text,
+  VStack,
+} from 'native-base';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
@@ -19,15 +23,10 @@ type FormValues = {
   password: string;
 };
 
-const formSchema = yup
-  .object<Partial<Record<keyof FormValues, yup.AnySchema>>>()
-  .shape({
-    email: yup
-      .string()
-      .email('Email harus valid')
-      .required('Email harus diisi'),
-    password: yup.string().required('Password harus diisi'),
-  });
+const formSchema = yup.object().shape({
+  email: yup.string().email('Email harus valid').required('Email harus diisi'),
+  password: yup.string().required('Password harus diisi'),
+});
 
 const LoginScreen: FC = () => {
   const {
@@ -40,14 +39,13 @@ const LoginScreen: FC = () => {
     mode: 'onChange',
   });
 
-  const insets = useSafeAreaInsets();
-
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleFormSubmit = (values: FormValues) => {
     setLoading(true);
+    setLoginError('');
 
     signInWithEmailAndPassword(auth, values.email, values.password)
       .catch((err) => {
@@ -59,7 +57,7 @@ const LoginScreen: FC = () => {
         ];
 
         if (firebaseErr.code?.includes('too-many-requests')) {
-          setError(
+          setLoginError(
             'Akses ke akun ini telah di non-aktifkan secara sementara karena terlalu banyak percobaan login.',
           );
 
@@ -67,9 +65,9 @@ const LoginScreen: FC = () => {
         }
 
         if (errorCodes.some((code) => firebaseErr.code?.includes(code))) {
-          setError('Tidak dapat menemukan akun tersebut.');
+          setLoginError('Tidak dapat menemukan akun tersebut.');
         } else {
-          setError('Terjadi error yang tidak dikenali!');
+          setLoginError('Terjadi error yang tidak dikenali!');
           console.error(firebaseErr);
         }
       })
@@ -81,114 +79,137 @@ const LoginScreen: FC = () => {
   }, []);
 
   return (
-    <VBox
-      style={{
-        paddingTop: insets.top + theme.spacing.xl,
-        paddingBottom: insets.bottom + theme.spacing.md,
-        paddingLeft: insets.left + theme.spacing.md,
-        paddingRight: insets.right + theme.spacing.md,
-        flex: 1,
-      }}
-      justify="between"
-    >
-      <VBox>
-        <Text size="xl" weight="semibold" color="primary" align="center">
-          Selamat Datang
-        </Text>
+    <Box flex={1} pt="6" p="3" safeArea>
+      <Text
+        fontSize="3xl"
+        fontWeight="semibold"
+        color="primary.500"
+        textAlign="center"
+      >
+        Selamat Datang
+      </Text>
 
-        <Text
-          size="md"
-          align="center"
-          color="slate"
-          lineHeight={1.4}
-          px="md"
-          my="md"
-        >
-          Silahkan memasukan data Anda untuk memulai kembali.
-        </Text>
+      <Text
+        fontSize="lg"
+        textAlign="center"
+        color="blueGray.500"
+        lineHeight="sm"
+        px="4"
+        mt="2"
+      >
+        Silahkan memasukan data Anda untuk memulai kembali.
+      </Text>
 
-        <VBox mt="sm">
-          <Controller
-            control={control}
-            name="email"
-            render={({
-              field: { onChange, ...field },
-              fieldState: { error },
-            }) => (
-              <TextField
+      <VStack mt="8">
+        <Controller
+          control={control}
+          name="email"
+          defaultValue=""
+          render={({
+            field: { onChange, ...field },
+            fieldState: { error },
+          }) => (
+            <FormControl isInvalid={error != null}>
+              <Input
                 {...field}
-                right={
-                  <Feather
+                onChangeText={(val) => onChange(val)}
+                px="4"
+                py="3"
+                fontSize="md"
+                backgroundColor="white"
+                placeholder="Email"
+                rightElement={
+                  <Icon
+                    as={Feather}
                     name={error == null ? 'check' : 'x'}
-                    color={
-                      error == null ? theme.colors.green : theme.colors.red
-                    }
-                    size={20}
+                    color={error == null ? 'green.500' : 'red.600'}
+                    size="md"
+                    mr="3"
                   />
                 }
-                hasError={error != null}
-                style={{ marginBottom: theme.spacing.md }}
-                onChangeText={(value) => onChange(value)}
-                placeholder="Email"
                 keyboardType="email-address"
                 autoComplete="email"
                 autoCapitalize="none"
-                autoFocus
+                autoCorrect={false}
               />
-            )}
-            defaultValue=""
-          />
+            </FormControl>
+          )}
+        />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({
-              field: { onChange, ...field },
-              fieldState: { error },
-            }) => (
-              <TextField
+        <Controller
+          control={control}
+          name="password"
+          defaultValue=""
+          render={({
+            field: { onChange, ...field },
+            fieldState: { error },
+          }) => (
+            <FormControl isInvalid={error != null}>
+              <Input
                 {...field}
-                right={
+                onChangeText={(val) => onChange(val)}
+                mt="4"
+                px="4"
+                py="3"
+                fontSize="md"
+                backgroundColor="white"
+                placeholder="Password"
+                type={showPassword ? 'text' : 'password'}
+                secureTextEntry={!showPassword}
+                keyboardType="numbers-and-punctuation"
+                autoCapitalize="none"
+                autoComplete="password"
+                autoCorrect={false}
+                rightElement={
                   <Pressable onPress={() => setShowPassword((val) => !val)}>
-                    <Feather
+                    <Icon
+                      as={Feather}
                       name={showPassword ? 'eye' : 'eye-off'}
-                      size={20}
-                      color={theme.colors.gray}
+                      color="gray.300"
+                      size="md"
+                      mr="3"
                     />
                   </Pressable>
                 }
-                hasError={error != null}
-                onChangeText={(value) => onChange(value)}
-                placeholder="Password"
-                autoCorrect={false}
-                autoCapitalize="none"
-                secureTextEntry={!showPassword}
               />
-            )}
-            defaultValue=""
-          />
-
-          {error && (
-            <Text mt="sm" color="red">
-              {error}
-            </Text>
+            </FormControl>
           )}
+        />
 
-          <Button
-            style={{ marginTop: theme.spacing.md }}
-            title="Masuk"
-            variant="primary"
-            onPress={handleSubmit(handleFormSubmit)}
-            isLoading={isLoading}
-            isDisabled={Object.values(formErrors).some((val) => val != null)}
-          />
-        </VBox>
-      </VBox>
+        {loginError && (
+          <HStack alignItems="center" mt="3">
+            <Icon
+              as={Feather}
+              name="alert-circle"
+              size="md"
+              color="red.500"
+              mr="1.5"
+            />
 
-      <Text color="primary" align="center" size="md" weight="semibold">
-        Point Service Center
-      </Text>
-    </VBox>
+            <Text color="red.500" fontSize="md">
+              {loginError}
+            </Text>
+          </HStack>
+        )}
+
+        <Button
+          mt="4"
+          py="2"
+          variant="solid"
+          onPress={handleSubmit(handleFormSubmit)}
+          isLoading={isLoading}
+          isDisabled={Object.values(formErrors).some((val) => val != null)}
+          _text={{
+            fontWeight: 'semibold',
+            fontSize: 'md',
+          }}
+        >
+          Masuk
+        </Button>
+      </VStack>
+
+      {/* TODO: Add store name */}
+    </Box>
   );
 };
 

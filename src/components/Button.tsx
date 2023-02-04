@@ -16,11 +16,11 @@ import theme from '@/theme';
 export type ButtonVariants = 'primary';
 
 export type ButtonProps = PressableProps & {
-  title: string;
   variant: ButtonVariants;
   style?: StyleProp<ViewStyle>;
   isLoading?: boolean;
   isDisabled?: boolean;
+  title: string;
 };
 
 const Button = forwardRef<View, ButtonProps>(

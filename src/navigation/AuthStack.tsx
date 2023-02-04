@@ -1,9 +1,9 @@
 import { FC } from 'react';
 import LoginScreen from '@/screens/auth/LoginScreen';
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const AuthStack: FC = () => {
   return (

@@ -1,11 +1,40 @@
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { FC } from 'react';
+import RootNavigator from '@/navigation/RootNavigator';
+import {
+  INativebaseConfig,
+  NativeBaseProvider,
+  extendTheme,
+} from 'native-base';
 
-import RootNavigator from './navigation/RootNavigator';
+const config: INativebaseConfig = {
+  strictMode: 'warn',
+};
 
-export default function App() {
+const colors = {
+  primary: {
+    50: '#C69EA7',
+    100: '#C08391',
+    200: '#BF677B',
+    300: '#C44864',
+    400: '#C72C4F',
+    500: '#C7163F',
+    600: '#C9002E',
+    700: '#A31233',
+    800: '#861D35',
+    900: '#6F2435',
+  },
+};
+
+const theme = extendTheme({
+  colors,
+});
+
+const App: FC = () => {
   return (
-    <SafeAreaProvider>
+    <NativeBaseProvider config={config} theme={theme}>
       <RootNavigator></RootNavigator>
-    </SafeAreaProvider>
+    </NativeBaseProvider>
   );
-}
+};
+
+export default App;

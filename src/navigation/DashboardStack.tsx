@@ -1,19 +1,26 @@
 import { FC } from 'react';
 import HomeScreen from '@/screens/dashboard/HomeScreen';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 const DashboardStack: FC = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Home"
-          options={{ title: 'Home' }}
-          component={HomeScreen}
-        />
+    <NavigationContainer
+      theme={{
+        ...DefaultTheme,
+        colors: { ...DefaultTheme.colors, background: 'white' },
+      }}
+    >
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Group>
+          <Stack.Screen
+            name="Home"
+            options={{ title: 'Home' }}
+            component={HomeScreen}
+          />
+        </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>
   );

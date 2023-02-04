@@ -2,7 +2,14 @@ import Constants from 'expo-constants';
 import { initializeApp } from 'firebase/app';
 
 import 'firebase/auth';
+import 'firebase/firestore';
+import Category from '@/types/category';
 import { getAuth } from 'firebase/auth';
+import {
+  QueryDocumentSnapshot,
+  collection,
+  getFirestore,
+} from 'firebase/firestore';
 
 const config = Constants.manifest?.extra;
 
@@ -22,3 +29,24 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// TODO: turn on long polling
+export const db = getFirestore(app);
+
+export const CATEGORIES = 'categories';
+export const USERS = 'users';
+
+const firestoreConverters = {
+  categories: {
+    toFirestore: (data: Category): Category => data,
+    fromFirestore: (snap: QueryDocumentSnapshot): Category =>
+      snap.data() as Category,
+  },
+};
+
+export const collections = {
+  users: collection(db, USERS),
+  categories: collection(db, CATEGORIES).withConverter(
+    firestoreConverters.categories,
+  ),
+};
