@@ -8,6 +8,7 @@ import { Feather } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import {
   arrayRemove,
+  deleteDoc,
   doc,
   onSnapshot,
   orderBy,
@@ -54,6 +55,10 @@ const HomeScreen: FC = () => {
 
   const [rawData, setRawData] = useState<Category[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const [categoriesDeleting, setCategoriesDeleting] = useState<Set<string>>(
     new Set(),
   );
 
@@ -232,9 +237,41 @@ const HomeScreen: FC = () => {
     });
   };
 
+  const getScreensDeletingKey = (categoryId: string, screen: string) => {
+    return `${categoryId}-${screen}`;
+  };
+
+  const deleteCategory = async (categoryId: string) => {
+    setCategoriesDeleting((val) => {
+      return new Set(val).add(categoryId);
+    });
+
+    return deleteDoc(doc(collections.categories, categoryId)).finally(() => {
+      setCategoriesDeleting((val) => {
+        const newVal = new Set(val);
+        newVal.delete(categoryId);
+
+        return newVal;
+      });
+    });
+  };
+
   const deleteScreen = async (categoryId: string, screen: string) => {
+    const key = getScreensDeletingKey(categoryId, screen);
+
+    setScreensDeleting((val) => {
+      return new Set(val).add(key);
+    });
+
     return updateDoc(doc(collections.categories, categoryId), {
       screens: arrayRemove(screen),
+    }).finally(() => {
+      setScreensDeleting((val) => {
+        const newVal = new Set(val);
+        newVal.delete(key);
+
+        return newVal;
+      });
     });
   };
 
@@ -261,7 +298,7 @@ const HomeScreen: FC = () => {
       <Box flex={1} alignSelf="stretch">
         <FlashList
           ref={listRef}
-          extraData={[collapsedCategories, user?.role]}
+          extraData={[collapsedCategories, screensDeleting, user?.role]}
           keyExtractor={(item) => `${item.categoryId}-${item.value}`}
           renderItem={({ item }) => {
             const isCollapsed = collapsedCategories.has(item.categoryId);
@@ -276,9 +313,41 @@ const HomeScreen: FC = () => {
                     justifyContent="space-between"
                     alignItems="center"
                   >
-                    <Text fontSize="xl" fontWeight="medium" color="primary.500">
-                      {item.value}
-                    </Text>
+                    <HStack alignItems="center">
+                      <Text
+                        fontSize="xl"
+                        fontWeight="medium"
+                        color="primary.500"
+                      >
+                        {item.value}
+                      </Text>
+
+                      {user?.role === 'admin' && (
+                        <IconButton
+                          ml="1"
+                          icon={
+                            categoriesDeleting.has(item.categoryId) ? (
+                              <ActivityIndicator
+                                color={primaryColor}
+                                size={14}
+                              />
+                            ) : (
+                              <Icon
+                                as={Feather}
+                                name="trash"
+                                color="primary.500"
+                                size="sm"
+                              />
+                            )
+                          }
+                          onPress={() => deleteCategory(item.categoryId)}
+                          rounded="full"
+                          _pressed={{
+                            backgroundColor: 'gray.100',
+                          }}
+                        />
+                      )}
+                    </HStack>
 
                     <Icon
                       as={Feather}
@@ -292,8 +361,6 @@ const HomeScreen: FC = () => {
             }
 
             if (isCollapsed) return null;
-
-            const payload = `${item.categoryId}-${item.value}`;
 
             return (
               <HStack justifyContent="space-between" pr="3">
@@ -319,28 +386,19 @@ const HomeScreen: FC = () => {
                     variant="ghost"
                     rounded="full"
                     icon={
-                      screensDeleting.has(payload) ? (
+                      screensDeleting.has(
+                        getScreensDeletingKey(item.categoryId, item.value),
+                      ) ? (
                         <ActivityIndicator color={primaryColor} size={14} />
                       ) : (
                         <Icon as={Feather} name="trash" size="sm" />
                       )
                     }
                     onPress={() => {
-                      setScreensDeleting((val) => {
-                        return new Set(val).add(payload);
-                      });
-
-                      deleteScreen(item.categoryId, item.value).finally(() => {
-                        setScreensDeleting((val) => {
-                          const newVal = new Set(val);
-                          newVal.delete(payload);
-
-                          return newVal;
-                        });
-                      });
+                      void deleteScreen(item.categoryId, item.value);
                     }}
                     _pressed={{
-                      backgroundColor: 'gray.200',
+                      backgroundColor: 'gray.100',
                     }}
                   />
                 )}
