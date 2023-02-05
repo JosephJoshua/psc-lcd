@@ -1,8 +1,18 @@
 import { FC, useState } from 'react';
 import { collections } from '@/lib/firebase';
+import { Feather } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { addDoc } from 'firebase/firestore';
-import { Button, FormControl, Input, VStack } from 'native-base';
+import { addDoc, doc, updateDoc } from 'firebase/firestore';
+import {
+  Button,
+  FormControl,
+  HStack,
+  Icon,
+  IconButton,
+  Input,
+  Text,
+  VStack,
+} from 'native-base';
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
@@ -14,13 +24,25 @@ const formSchema = yup.object().shape({
   name: yup.string().required('Nama harus diisi'),
 });
 
-export type AddCategoryModalProps = {
+/**
+ * We can use a type intersection but this is good enough for now.
+ */
+export type CategoryEntryModalProps = {
+  type: 'add' | 'edit';
+  initialValues?: FormValues;
+  categoryId?: string;
   onClose: () => void;
 };
 
-const AddCategoryModal: FC<AddCategoryModalProps> = ({ onClose }) => {
+const CategoryEntryModal: FC<CategoryEntryModalProps> = ({
+  onClose,
+  initialValues,
+  categoryId,
+  type,
+}) => {
   const { control, handleSubmit, setValue } = useForm<FormValues>({
     resolver: yupResolver(formSchema),
+    values: initialValues,
   });
 
   const [isLoading, setLoading] = useState<boolean>(false);
@@ -28,10 +50,17 @@ const AddCategoryModal: FC<AddCategoryModalProps> = ({ onClose }) => {
   const handleFormSubmit = (values: FormValues) => {
     setLoading(true);
 
-    addDoc(collections.categories, {
-      name: values.name,
-      screens: [],
-    })
+    const promise =
+      type === 'add'
+        ? addDoc(collections.categories, {
+            name: values.name,
+            screens: [],
+          })
+        : updateDoc(doc(collections.categories, categoryId), {
+            name: values.name,
+          });
+
+    promise
       .then(() => {
         onClose();
         setValue('name', '');
@@ -41,6 +70,24 @@ const AddCategoryModal: FC<AddCategoryModalProps> = ({ onClose }) => {
 
   return (
     <VStack width="full" pt="3" pb="5" px="4">
+      <HStack justifyContent="space-between" alignItems="center" mb="3">
+        <Text fontSize="2xl" color="primary.500" fontWeight="semibold">
+          {type === 'add' ? 'Tambah' : 'Ubah'} kategori
+        </Text>
+
+        <IconButton
+          onPress={() => onClose()}
+          icon={<Icon as={Feather} name="x" size="md" color="black" />}
+          backgroundColor="gray.100"
+          size="lg"
+          p="2"
+          rounded="full"
+          _pressed={{
+            bgColor: 'gray.200',
+          }}
+        />
+      </HStack>
+
       <Controller
         control={control}
         name="name"
@@ -75,10 +122,10 @@ const AddCategoryModal: FC<AddCategoryModalProps> = ({ onClose }) => {
         onPress={handleSubmit(handleFormSubmit)}
         isLoading={isLoading}
       >
-        Tambah
+        {type === 'add' ? 'Tambah' : 'Simpan'}
       </Button>
     </VStack>
   );
 };
 
-export default AddCategoryModal;
+export default CategoryEntryModal;

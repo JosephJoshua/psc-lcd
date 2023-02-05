@@ -14,7 +14,7 @@ module.exports = function (api) {
             '@/hooks': './src/hooks',
             '@/utils': './src/utils',
             '@/types': './src/types',
-            '@/theme': './src/theme',
+            '@/modals': './src/modals',
           },
         },
       ],

@@ -5,12 +5,14 @@ import Category from '@/types/category';
 import { Feather } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import {
+  arrayRemove,
   arrayUnion,
   doc,
   onSnapshot,
   orderBy,
   query,
   updateDoc,
+  writeBatch,
 } from 'firebase/firestore';
 import {
   Actionsheet,
@@ -29,7 +31,7 @@ import {
 import { Controller, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 
-import AddCategoryModal from './AddCategoryModal';
+import CategoryEntryModal from './CategoryEntryModal';
 
 type FormValues = {
   name: string;
@@ -41,13 +43,20 @@ const formSchema = yup.object().shape({
   categoryId: yup.string().required('Kategori layar harus dipilih'),
 });
 
-export type AddScreenModalProps = {
+export type ScreenEntryModalProps = {
+  type: 'add' | 'edit';
+  initialValues?: FormValues;
   onClose: () => void;
 };
 
-const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
+const ScreenEntryModal: FC<ScreenEntryModalProps> = ({
+  onClose,
+  type,
+  initialValues,
+}) => {
   const { control, handleSubmit, setValue } = useForm<FormValues>({
     resolver: yupResolver(formSchema),
+    values: initialValues,
   });
 
   const { height: windowHeight } = useWindowDimensions();
@@ -60,14 +69,41 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
   const [categoryData, setCategoryData] = useState<Category[]>([]);
 
   const handleFormSubmit = (values: FormValues) => {
-    console.log(values);
-
     setLoading(true);
 
-    const categoryRef = doc(db, CATEGORIES, values.categoryId);
-    updateDoc(categoryRef, {
-      screens: arrayUnion(values.name),
-    })
+    const newCategoryRef = doc(db, CATEGORIES, values.categoryId);
+
+    const promise = (() => {
+      if (type === 'add') {
+        return updateDoc(newCategoryRef, {
+          screens: arrayUnion(values.name),
+        });
+      }
+
+      const batch = writeBatch(db);
+
+      /**
+       * Remove the old screen from the array.
+       */
+      if (initialValues?.name != null) {
+        const categoryRef = doc(db, CATEGORIES, initialValues.categoryId);
+
+        batch.update(categoryRef, {
+          screens: arrayRemove(initialValues.name),
+        });
+      }
+
+      /**
+       * And push the new one to the array.
+       */
+      batch.update(newCategoryRef, {
+        screens: arrayUnion(values.name),
+      });
+
+      return batch.commit();
+    })();
+
+    promise
       .then(() => {
         onClose();
 
@@ -96,7 +132,7 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
     <VStack pt="3" pb="5" px="4" width="full">
       <HStack justifyContent="space-between" alignItems="center" mb="3">
         <Text fontSize="2xl" color="primary.500" fontWeight="semibold">
-          Tambah layar
+          {type === 'add' ? 'Tambah' : 'Ubah'} layar
         </Text>
 
         <IconButton
@@ -202,7 +238,7 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
         onPress={handleSubmit(handleFormSubmit)}
         isLoading={isLoading}
       >
-        Tambah
+        {type === 'add' ? 'Tambah' : 'Simpan'}
       </Button>
 
       <Actionsheet
@@ -212,7 +248,10 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
       >
         <KeyboardAvoidingView behavior="padding" width="full">
           <Actionsheet.Content>
-            <AddCategoryModal onClose={() => setAddCategoryModalOpen(false)} />
+            <CategoryEntryModal
+              type="add"
+              onClose={() => setAddCategoryModalOpen(false)}
+            />
           </Actionsheet.Content>
         </KeyboardAvoidingView>
       </Actionsheet>
@@ -282,4 +321,4 @@ const CategorySearchBox: FC<CategorySearchBoxProps> = ({
   );
 };
 
-export default AddScreenModal;
+export default ScreenEntryModal;

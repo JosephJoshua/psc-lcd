@@ -8,7 +8,7 @@
       "@/hooks/*": ["./src/hooks/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/types/*": ["./src/types/*"],
-      "@/theme": ["./src/theme"]
+      "@/modals/*": ["./src/modals/*"]
     },
     "target": "es2017",
     "lib": ["dom", "dom.iterable", "esnext"],

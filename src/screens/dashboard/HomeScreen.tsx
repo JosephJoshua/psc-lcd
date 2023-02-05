@@ -2,6 +2,8 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
 import { collections } from '@/lib/firebase';
+import CategoryEntryModal from '@/modals/CategoryEntryModal';
+import ScreenEntryModal from '@/modals/ScreenEntryModal';
 import Category from '@/types/category';
 import { Feather } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
@@ -30,8 +32,6 @@ import {
   VStack,
 } from 'native-base';
 
-import AddScreenModal from '../../modals/AddScreenModal';
-
 type ListItem = {
   type: 'row' | 'sectionHeader';
   categoryId: string;
@@ -42,6 +42,11 @@ type ListItem = {
 type ScreenIdentifier = {
   categoryId: string;
   screen: string;
+};
+
+type CategoryToEdit = {
+  id: string;
+  name: string;
 };
 
 const HomeScreen: FC = () => {
@@ -55,6 +60,14 @@ const HomeScreen: FC = () => {
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [screenToDelete, setScreenToDelete] = useState<ScreenIdentifier | null>(
+    null,
+  );
+
+  const [screenToEdit, setScreenToEdit] = useState<ScreenIdentifier | null>(
+    null,
+  );
+
+  const [categoryToEdit, setCategoryToEdit] = useState<CategoryToEdit | null>(
     null,
   );
 
@@ -305,7 +318,32 @@ const HomeScreen: FC = () => {
 
                       {user?.role === 'admin' && (
                         <IconButton
-                          ml="1"
+                          ml="2"
+                          icon={
+                            <Icon
+                              as={Feather}
+                              name="edit-3"
+                              color="primary.500"
+                              size="sm"
+                            />
+                          }
+                          onPress={() =>
+                            setCategoryToEdit({
+                              id: item.categoryId,
+                              name: item.value,
+                            })
+                          }
+                          rounded="full"
+                          _pressed={{
+                            backgroundColor: 'white',
+                          }}
+                        />
+                      )}
+
+                      {user?.role === 'admin' && (
+                        <IconButton
+                          ml="1.5"
+                          px="0"
                           icon={
                             <Icon
                               as={Feather}
@@ -317,7 +355,7 @@ const HomeScreen: FC = () => {
                           onPress={() => setCategoryToDelete(item.categoryId)}
                           rounded="full"
                           _pressed={{
-                            backgroundColor: 'gray.100',
+                            backgroundColor: 'white',
                           }}
                         />
                       )}
@@ -355,22 +393,47 @@ const HomeScreen: FC = () => {
                   )}
                 </HStack>
 
-                {user?.role === 'admin' && (
-                  <IconButton
-                    variant="ghost"
-                    rounded="full"
-                    icon={<Icon as={Feather} name="trash" size="sm" />}
-                    onPress={() =>
-                      setScreenToDelete({
-                        categoryId: item.categoryId,
-                        screen: item.value,
-                      })
-                    }
-                    _pressed={{
-                      backgroundColor: 'gray.100',
-                    }}
-                  />
-                )}
+                <HStack>
+                  {user?.role === 'admin' && (
+                    <IconButton
+                      icon={
+                        <Icon
+                          as={Feather}
+                          name="edit-3"
+                          color="primary.500"
+                          size="sm"
+                        />
+                      }
+                      onPress={() =>
+                        setScreenToEdit({
+                          categoryId: item.categoryId,
+                          screen: item.value,
+                        })
+                      }
+                      rounded="full"
+                      _pressed={{
+                        backgroundColor: 'white',
+                      }}
+                    />
+                  )}
+
+                  {user?.role === 'admin' && (
+                    <IconButton
+                      variant="ghost"
+                      rounded="full"
+                      icon={<Icon as={Feather} name="trash" size="sm" />}
+                      onPress={() =>
+                        setScreenToDelete({
+                          categoryId: item.categoryId,
+                          screen: item.value,
+                        })
+                      }
+                      _pressed={{
+                        backgroundColor: 'white',
+                      }}
+                    />
+                  )}
+                </HStack>
               </HStack>
             );
           }}
@@ -381,13 +444,30 @@ const HomeScreen: FC = () => {
       </Box>
 
       <Actionsheet
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
+        isOpen={addModalOpen || screenToEdit != null}
+        onClose={() => {
+          setAddModalOpen(false);
+          setScreenToEdit(null);
+        }}
         size="full"
       >
         <KeyboardAvoidingView behavior="padding" width="full">
           <Actionsheet.Content>
-            <AddScreenModal onClose={() => setAddModalOpen(false)} />
+            <ScreenEntryModal
+              type={addModalOpen ? 'add' : 'edit'}
+              initialValues={
+                screenToEdit == null
+                  ? undefined
+                  : {
+                      categoryId: screenToEdit.categoryId,
+                      name: screenToEdit.screen,
+                    }
+              }
+              onClose={() => {
+                setAddModalOpen(false);
+                setScreenToEdit(null);
+              }}
+            />
           </Actionsheet.Content>
         </KeyboardAvoidingView>
       </Actionsheet>
@@ -402,6 +482,25 @@ const HomeScreen: FC = () => {
           shadow="5"
         />
       )}
+
+      <Actionsheet
+        isOpen={categoryToEdit != null}
+        onClose={() => setCategoryToEdit(null)}
+        size="full"
+      >
+        <KeyboardAvoidingView behavior="padding" width="full">
+          <Actionsheet.Content>
+            {categoryToEdit != null && (
+              <CategoryEntryModal
+                type="edit"
+                categoryId={categoryToEdit.id}
+                initialValues={categoryToEdit}
+                onClose={() => setCategoryToEdit(null)}
+              />
+            )}
+          </Actionsheet.Content>
+        </KeyboardAvoidingView>
+      </Actionsheet>
 
       <Modal
         isOpen={screenToDelete != null}
