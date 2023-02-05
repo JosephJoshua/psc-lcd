@@ -1,5 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, UIManager } from 'react-native';
+import { FC, useEffect, useMemo, useState } from 'react';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
 import { collections } from '@/lib/firebase';
@@ -45,16 +44,6 @@ type ScreenIdentifier = {
   screen: string;
 };
 
-/**
- * @see https://reactnative.dev/docs/layoutanimation
- */
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental != null
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 const HomeScreen: FC = () => {
   const user = useUser();
 
@@ -72,7 +61,6 @@ const HomeScreen: FC = () => {
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
 
-  const listRef = useRef<FlashList<ListItem> | null>(null);
   const debouncedSearchText = useDebounce(searchText, 100);
 
   const fuse = useMemo(
@@ -277,7 +265,6 @@ const HomeScreen: FC = () => {
 
       <Box flex={1} alignSelf="stretch">
         <FlashList
-          ref={listRef}
           extraData={[collapsedCategories, user?.role]}
           keyExtractor={(item) => `${item.categoryId}-${item.value}`}
           ListEmptyComponent={
