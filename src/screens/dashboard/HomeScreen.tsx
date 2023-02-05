@@ -1,6 +1,5 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, UIManager } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
 import { collections } from '@/lib/firebase';
@@ -27,6 +26,7 @@ import {
   Pressable,
   Text,
   VStack,
+  useToken,
 } from 'native-base';
 
 import AddScreenModal from '../../modals/AddScreenModal';
@@ -50,6 +50,7 @@ if (
 
 const HomeScreen: FC = () => {
   const user = useUser();
+  const primaryColor = useToken('colors', 'primary.500') as string;
 
   const [rawData, setRawData] = useState<Category[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
@@ -63,10 +64,7 @@ const HomeScreen: FC = () => {
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
 
-  const swipeableRefs = useRef<(Swipeable | null)[]>([]);
-  const openedSwipeables = useRef<(Swipeable | null)[]>([]);
   const listRef = useRef<FlashList<ListItem> | null>(null);
-
   const debouncedSearchText = useDebounce(searchText, 100);
 
   const fuse = useMemo(
@@ -265,7 +263,7 @@ const HomeScreen: FC = () => {
           ref={listRef}
           extraData={[collapsedCategories, user?.role]}
           keyExtractor={(item) => `${item.categoryId}-${item.value}`}
-          renderItem={({ item, index }) => {
+          renderItem={({ item }) => {
             const isCollapsed = collapsedCategories.has(item.categoryId);
 
             if (item.type === 'sectionHeader') {
@@ -295,61 +293,10 @@ const HomeScreen: FC = () => {
 
             if (isCollapsed) return null;
 
+            const payload = `${item.categoryId}-${item.value}`;
+
             return (
-              <Swipeable
-                ref={(el) => (swipeableRefs.current[index] = el)}
-                enabled={user?.role === 'admin'}
-                renderRightActions={() => {
-                  const payload = `${item.categoryId}-${item.value}`;
-
-                  return (
-                    <IconButton
-                      variant="solid"
-                      borderRightRadius="0"
-                      py="0"
-                      icon={
-                        screensDeleting.has(payload) ? (
-                          <ActivityIndicator size={16} color="white" />
-                        ) : (
-                          <Icon
-                            as={Feather}
-                            name="trash"
-                            size="sm"
-                            color="white"
-                          />
-                        )
-                      }
-                      onPress={() => {
-                        setScreensDeleting((val) => {
-                          const newVal = new Set(val).add(payload);
-                          return newVal;
-                        });
-
-                        deleteScreen(item.categoryId, item.value).finally(
-                          () => {
-                            setScreensDeleting((val) => {
-                              const newVal = new Set(val);
-                              newVal.delete(payload);
-
-                              return newVal;
-                            });
-                          },
-                        );
-                      }}
-                    />
-                  );
-                }}
-                onSwipeableWillOpen={() => {
-                  const currentRef = swipeableRefs.current[index] ?? null;
-
-                  openedSwipeables.current.forEach((swipeable) => {
-                    if (swipeable === currentRef) return;
-                    swipeable?.close();
-                  });
-
-                  openedSwipeables.current.push(currentRef);
-                }}
-              >
+              <HStack justifyContent="space-between" pr="3">
                 <HStack mx="6" mb="1" height="9">
                   {splitStrRanges(item.value, item.matchRanges ?? []).map(
                     ({ indices: [start, end], isMatch }) => {
@@ -366,7 +313,38 @@ const HomeScreen: FC = () => {
                     },
                   )}
                 </HStack>
-              </Swipeable>
+
+                {user?.role === 'admin' && (
+                  <IconButton
+                    variant="ghost"
+                    rounded="full"
+                    icon={
+                      screensDeleting.has(payload) ? (
+                        <ActivityIndicator color={primaryColor} size={14} />
+                      ) : (
+                        <Icon as={Feather} name="trash" size="sm" />
+                      )
+                    }
+                    onPress={() => {
+                      setScreensDeleting((val) => {
+                        return new Set(val).add(payload);
+                      });
+
+                      deleteScreen(item.categoryId, item.value).finally(() => {
+                        setScreensDeleting((val) => {
+                          const newVal = new Set(val);
+                          newVal.delete(payload);
+
+                          return newVal;
+                        });
+                      });
+                    }}
+                    _pressed={{
+                      backgroundColor: 'gray.200',
+                    }}
+                  />
+                )}
+              </HStack>
             );
           }}
           data={listData}
