@@ -57,9 +57,7 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
 
   const [isLoading, setLoading] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
-  const [categoryData, setCategoryData] = useState<
-    (Category & { id: string })[]
-  >([]);
+  const [categoryData, setCategoryData] = useState<Category[]>([]);
 
   const handleFormSubmit = (values: FormValues) => {
     console.log(values);
@@ -85,8 +83,8 @@ const AddScreenModal: FC<AddScreenModalProps> = ({ onClose }) => {
       (snapshot) =>
         setCategoryData(
           snapshot.docs.map((doc) => ({
-            id: doc.id,
             ...doc.data(),
+            id: doc.id,
           })),
         ),
     );

@@ -1,4 +1,5 @@
 type Category = {
+  id: string;
   name: string;
   screens: string[];
 };

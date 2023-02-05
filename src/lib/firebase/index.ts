@@ -4,6 +4,7 @@ import { initializeApp } from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import Category from '@/types/category';
+import User from '@/types/user';
 import { getAuth } from 'firebase/auth';
 import {
   QueryDocumentSnapshot,
@@ -39,13 +40,18 @@ export const USERS = 'users';
 const firestoreConverters = {
   categories: {
     toFirestore: (data: Category): Category => data,
-    fromFirestore: (snap: QueryDocumentSnapshot): Category =>
+    fromFirestore: (snap: QueryDocumentSnapshot): Omit<Category, 'id'> =>
       snap.data() as Category,
+  },
+  users: {
+    toFirestore: (data: User): User => data,
+    fromFirestore: (snap: QueryDocumentSnapshot): Omit<User, 'id'> =>
+      snap.data() as User,
   },
 };
 
 export const collections = {
-  users: collection(db, USERS),
+  users: collection(db, USERS).withConverter(firestoreConverters.users),
   categories: collection(db, CATEGORIES).withConverter(
     firestoreConverters.categories,
   ),
