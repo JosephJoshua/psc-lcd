@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, UIManager } from 'react-native';
+import { Platform, UIManager } from 'react-native';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
 import { collections } from '@/lib/firebase';
@@ -19,15 +19,16 @@ import Fuse from 'fuse.js';
 import {
   Actionsheet,
   Box,
+  Button,
   HStack,
   Icon,
   IconButton,
   Input,
   KeyboardAvoidingView,
+  Modal,
   Pressable,
   Text,
   VStack,
-  useToken,
 } from 'native-base';
 
 import AddScreenModal from '../../modals/AddScreenModal';
@@ -37,6 +38,11 @@ type ListItem = {
   categoryId: string;
   value: string;
   matchRanges?: Fuse.RangeTuple[];
+};
+
+type ScreenIdentifier = {
+  categoryId: string;
+  screen: string;
 };
 
 /**
@@ -51,19 +57,16 @@ if (
 
 const HomeScreen: FC = () => {
   const user = useUser();
-  const primaryColor = useToken('colors', 'primary.500') as string;
 
   const [rawData, setRawData] = useState<Category[]>([]);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
     new Set(),
   );
 
-  const [categoriesDeleting, setCategoriesDeleting] = useState<Set<string>>(
-    new Set(),
-  );
-
-  const [screensDeleting, setScreensDeleting] = useState<Set<string>>(
-    new Set(),
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [screenToDelete, setScreenToDelete] = useState<ScreenIdentifier | null>(
+    null,
   );
 
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
@@ -237,42 +240,19 @@ const HomeScreen: FC = () => {
     });
   };
 
-  const getScreensDeletingKey = (categoryId: string, screen: string) => {
-    return `${categoryId}-${screen}`;
-  };
-
   const deleteCategory = async (categoryId: string) => {
-    setCategoriesDeleting((val) => {
-      return new Set(val).add(categoryId);
-    });
-
+    setIsDeleting(true);
     return deleteDoc(doc(collections.categories, categoryId)).finally(() => {
-      setCategoriesDeleting((val) => {
-        const newVal = new Set(val);
-        newVal.delete(categoryId);
-
-        return newVal;
-      });
+      setIsDeleting(false);
     });
   };
 
-  const deleteScreen = async (categoryId: string, screen: string) => {
-    const key = getScreensDeletingKey(categoryId, screen);
-
-    setScreensDeleting((val) => {
-      return new Set(val).add(key);
-    });
+  const deleteScreen = async ({ categoryId, screen }: ScreenIdentifier) => {
+    setIsDeleting(true);
 
     return updateDoc(doc(collections.categories, categoryId), {
       screens: arrayRemove(screen),
-    }).finally(() => {
-      setScreensDeleting((val) => {
-        const newVal = new Set(val);
-        newVal.delete(key);
-
-        return newVal;
-      });
-    });
+    }).finally(() => setIsDeleting(false));
   };
 
   return (
@@ -298,8 +278,22 @@ const HomeScreen: FC = () => {
       <Box flex={1} alignSelf="stretch">
         <FlashList
           ref={listRef}
-          extraData={[collapsedCategories, screensDeleting, user?.role]}
+          extraData={[collapsedCategories, user?.role]}
           keyExtractor={(item) => `${item.categoryId}-${item.value}`}
+          ListEmptyComponent={
+            <VStack justifyContent="center" alignItems="center" mt="16">
+              <Icon
+                as={Feather}
+                name="alert-triangle"
+                color="primary.500"
+                size="4xl"
+              />
+
+              <Text fontSize="lg" color="primary.500" mt="1">
+                Tidak dapat menemukan data!
+              </Text>
+            </VStack>
+          }
           renderItem={({ item }) => {
             const isCollapsed = collapsedCategories.has(item.categoryId);
 
@@ -326,21 +320,14 @@ const HomeScreen: FC = () => {
                         <IconButton
                           ml="1"
                           icon={
-                            categoriesDeleting.has(item.categoryId) ? (
-                              <ActivityIndicator
-                                color={primaryColor}
-                                size={14}
-                              />
-                            ) : (
-                              <Icon
-                                as={Feather}
-                                name="trash"
-                                color="primary.500"
-                                size="sm"
-                              />
-                            )
+                            <Icon
+                              as={Feather}
+                              name="trash"
+                              color="primary.500"
+                              size="sm"
+                            />
                           }
-                          onPress={() => deleteCategory(item.categoryId)}
+                          onPress={() => setCategoryToDelete(item.categoryId)}
                           rounded="full"
                           _pressed={{
                             backgroundColor: 'gray.100',
@@ -385,18 +372,13 @@ const HomeScreen: FC = () => {
                   <IconButton
                     variant="ghost"
                     rounded="full"
-                    icon={
-                      screensDeleting.has(
-                        getScreensDeletingKey(item.categoryId, item.value),
-                      ) ? (
-                        <ActivityIndicator color={primaryColor} size={14} />
-                      ) : (
-                        <Icon as={Feather} name="trash" size="sm" />
-                      )
+                    icon={<Icon as={Feather} name="trash" size="sm" />}
+                    onPress={() =>
+                      setScreenToDelete({
+                        categoryId: item.categoryId,
+                        screen: item.value,
+                      })
                     }
-                    onPress={() => {
-                      void deleteScreen(item.categoryId, item.value);
-                    }}
                     _pressed={{
                       backgroundColor: 'gray.100',
                     }}
@@ -433,6 +415,79 @@ const HomeScreen: FC = () => {
           shadow="5"
         />
       )}
+
+      <Modal
+        isOpen={screenToDelete != null}
+        onClose={() => setScreenToDelete(null)}
+      >
+        <Modal.Content>
+          <Modal.CloseButton />
+          <Modal.Header>Hapus Layar</Modal.Header>
+          <Modal.Body>Apakah Anda yakin ingin menghapus layar ini?</Modal.Body>
+          <Modal.Footer>
+            <Button.Group>
+              <Button
+                variant="ghost"
+                colorScheme="blueGray"
+                onPress={() => setScreenToDelete(null)}
+              >
+                Batal
+              </Button>
+
+              <Button
+                isLoading={isDeleting}
+                onPress={() => {
+                  if (screenToDelete == null) return;
+
+                  deleteScreen(screenToDelete).finally(() =>
+                    setScreenToDelete(null),
+                  );
+                }}
+              >
+                Hapus
+              </Button>
+            </Button.Group>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
+
+      <Modal
+        isOpen={categoryToDelete != null}
+        onClose={() => setCategoryToDelete(null)}
+      >
+        <Modal.Content>
+          <Modal.CloseButton />
+          <Modal.Header>Hapus Kategori</Modal.Header>
+          <Modal.Body>
+            Apakah Anda yakin ingin menghapus kategori ini? Semua layar di bawah
+            kategori ini juga akan ikut terhapus.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button.Group>
+              <Button
+                variant="ghost"
+                colorScheme="blueGray"
+                onPress={() => setCategoryToDelete(null)}
+              >
+                Batal
+              </Button>
+
+              <Button
+                isLoading={isDeleting}
+                onPress={() => {
+                  if (categoryToDelete == null) return;
+
+                  deleteCategory(categoryToDelete).finally(() =>
+                    setCategoryToDelete(null),
+                  );
+                }}
+              >
+                Hapus
+              </Button>
+            </Button.Group>
+          </Modal.Footer>
+        </Modal.Content>
+      </Modal>
     </VStack>
   );
 };
