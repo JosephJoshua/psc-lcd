@@ -2,12 +2,13 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import onAdd from '@/events/onAdd';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
-import { collections } from '@/lib/firebase';
+import { auth, collections } from '@/lib/firebase';
 import CategoryEntryModal from '@/modals/CategoryEntryModal';
 import ScreenEntryModal from '@/modals/ScreenEntryModal';
 import Category from '@/types/category';
 import { Feather } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
+import { signOut } from 'firebase/auth';
 import {
   arrayRemove,
   deleteDoc,
@@ -276,6 +277,8 @@ const HomeScreen: FC = () => {
       >
         Point Service Center
       </Text>
+
+      <Button onPress={() => signOut(auth)}>Logout</Button>
 
       <Input
         mt="3"

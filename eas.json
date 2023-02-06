@@ -1,0 +1,30 @@
+{
+  "build": {
+    "base": {
+      "android": {
+        "image": "ubuntu-18.04-android-30-ndk-r19c",
+        "ndk": "21.4.7075529"
+      },
+      "ios": {
+        "image": "latest",
+        "node": "12.13.0",
+        "yarn": "1.22.5"
+      }
+    },
+    "preview": {
+      "extends": "base",
+      "android": {
+        "distribution": "internal",
+        "withoutCredentials": true,
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Debug"
+      }
+    },
+    "production": {
+      "extends": "base"
+    }
+  }
+}

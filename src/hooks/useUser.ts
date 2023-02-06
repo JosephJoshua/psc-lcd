@@ -21,7 +21,7 @@ const useUser = () => {
     );
 
     return () => unsubscribe();
-  }, [session.user]);
+  }, [session.user?.uid]);
 
   return user;
 };

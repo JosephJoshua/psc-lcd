@@ -4,7 +4,7 @@ import { UserRole } from '@/types/user';
 import { Feather } from '@expo/vector-icons';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import {
   Button,
   FormControl,
@@ -54,8 +54,8 @@ const AddUserModal: FC<AddUserModalProps> = ({ onClose }) => {
     setLoading(true);
 
     createUserWithEmailAndPassword(auth, values.email, values.password)
-      .then(() =>
-        addDoc(collections.users, {
+      .then((credentials) =>
+        setDoc(doc(collections.users, credentials.user.uid), {
           username: values.username,
           role: values.role,
           email: values.email,
