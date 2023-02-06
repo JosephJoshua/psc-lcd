@@ -3,6 +3,7 @@ import { Animated, StyleSheet } from 'react-native';
 import { CurvedBottomBar } from 'react-native-curved-bottom-bar';
 import onAdd from '@/events/onAdd';
 import useUser from '@/hooks/useUser';
+import AccountsScreen from '@/screens/dashboard/AccountsScreen';
 import HomeScreen from '@/screens/dashboard/HomeScreen';
 import { ScreenNameValues } from '@/types/screenNames';
 import { Feather } from '@expo/vector-icons';
@@ -35,14 +36,18 @@ const getIcon = (
 };
 
 const DashboardStack: FC = () => {
-  const gray300 = useToken('colors', 'gray.300') as string;
+  const [gray50, gray300] = useToken('colors', [
+    'gray.50',
+    'gray.300',
+  ]) as string[];
+
   const user = useUser();
 
   return (
     <NavigationContainer
       theme={{
         ...DefaultTheme,
-        colors: { ...DefaultTheme.colors, background: 'white' },
+        colors: { ...DefaultTheme.colors, background: gray50 },
       }}
     >
       {user?.role !== 'admin' ? (
@@ -110,7 +115,7 @@ const DashboardStack: FC = () => {
           <CurvedBottomBar.Screen
             name="Accounts"
             position="RIGHT"
-            component={HomeScreen}
+            component={AccountsScreen}
           />
         </CurvedBottomBar.Navigator>
       )}
