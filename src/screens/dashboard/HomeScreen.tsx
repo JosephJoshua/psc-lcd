@@ -1,4 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
+import onAdd from '@/events/onAdd';
 import useDebounce from '@/hooks/useDebounce';
 import useUser from '@/hooks/useUser';
 import { collections } from '@/lib/firebase';
@@ -180,6 +181,14 @@ const HomeScreen: FC = () => {
     );
 
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const subscription = onAdd.subscribe('Home', () => {
+      setAddModalOpen(true);
+    });
+
+    return () => subscription?.unsubscribe();
   }, []);
 
   type MatchRange = {
@@ -481,17 +490,6 @@ const HomeScreen: FC = () => {
           </Actionsheet.Content>
         </KeyboardAvoidingView>
       </Actionsheet>
-
-      {user?.role === 'admin' && (
-        <IconButton
-          onPress={() => setAddModalOpen(true)}
-          icon={<Icon as={Feather} name="plus" size="xl" color="white" />}
-          size="16"
-          backgroundColor="primary.500"
-          rounded="full"
-          shadow="5"
-        />
-      )}
 
       <Actionsheet
         isOpen={categoryToEdit != null}
