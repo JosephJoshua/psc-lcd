@@ -58,11 +58,16 @@ const AddUserModal: FC<AddUserModalProps> = ({ onClose }) => {
         addDoc(collections.users, {
           username: values.username,
           role: values.role,
+          email: values.email,
         }),
       )
       .then(() => {
         onClose();
+
         setValue('username', '');
+        setValue('email', '');
+        setValue('password', '');
+        setValue('role', 'employee');
       })
       .finally(() => setLoading(false));
   };
@@ -155,6 +160,10 @@ const AddUserModal: FC<AddUserModalProps> = ({ onClose }) => {
               type="password"
               secureTextEntry
             />
+
+            <FormControl.ErrorMessage>
+              {error?.message}
+            </FormControl.ErrorMessage>
           </FormControl>
         )}
       />
