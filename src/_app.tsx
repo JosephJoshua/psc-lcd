@@ -3,6 +3,7 @@ import RootNavigator from '@/navigation/RootNavigator';
 import {
   INativebaseConfig,
   NativeBaseProvider,
+  StatusBar,
   extendTheme,
 } from 'native-base';
 
@@ -33,6 +34,7 @@ const App: FC = () => {
   return (
     <NativeBaseProvider config={config} theme={theme}>
       <RootNavigator></RootNavigator>
+      <StatusBar animated hidden={false} />
     </NativeBaseProvider>
   );
 };

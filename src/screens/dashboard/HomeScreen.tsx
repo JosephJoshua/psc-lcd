@@ -258,8 +258,18 @@ const HomeScreen: FC = () => {
 
   return (
     <VStack flex={1} alignItems="center" pb="6" safeArea>
-      <Input
+      <Text
+        fontSize="2xl"
+        color="primary.500"
+        fontWeight="semibold"
+        textAlign="center"
         mt="4"
+      >
+        Point Service Center
+      </Text>
+
+      <Input
+        mt="3"
         mx="4"
         mb="2"
         py="2"
